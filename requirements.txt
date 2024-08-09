@@ -1,0 +1,6 @@
+django
+psycopg2-binary==2.9.9
+gdal
+python-dotenv
+django-environ
+# meteofrance-api

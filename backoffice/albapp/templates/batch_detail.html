@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Batch Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .container {
+            padding: 2rem 0rem;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            border: 0px solid #ced4da !important;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .filer {
+            border: 1px solid #ced4da !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Batch Details</h1>
+        <div class="table-responsive">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Status</th>
+                            <th>Fire Situation</th>
+                            <th>Batch</th>
+                            <th>Tag</th>
+                            <th>Element Type</th>
+                            <th>Element Name</th>
+                            <th>Update Elements</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="{{ fire_situation.elements|length }}">
+                                <input type="text" name="status" value="{{ batch.status }}" class="form-control" title="{{ batch.status }}">
+                            </td>
+                            <td rowspan="{{ fire_situation.elements|length }}">
+                                <!-- GPS: {{ gps_coords|join:',' }} -->
+                                GPS:
+                                <input type="text" name="gps_coords" value="{{ gps_coords }}" class="form-control" title="{{ gps_coords }}">
+                                <br>
+                                ZIP Code:
+                                {{ zipcode }}
+                            </td>
+                            <td rowspan="{{ fire_situation.elements|length }}">
+                                {{ batch.batch_name }}
+                            </td>
+                            <td rowspan="{{ fire_situation.elements|length }}">
+                                <input type="text" name="tags" value="{{ batch.tags }}" class="form-control" title="{{ batch.tags }}">
+                            </td>
+                            {% for element in fire_situation.elements %}
+                            <td>{{ element.element_type }}</td>
+                            <td>
+                                {% if element.element_type == 'Shapefile' %}
+                                <input type="text" name="shp_element_{{ element.name }}" value="{{ element.name }}" class="form-control" title="{{ element.name }}">
+                                {% elif element.element_type == 'Image' %}
+                                <input type="text" name="image_element_{{ element.name }}" value="{{ element.name }}" class="form-control" title="{{ element.name }}">
+                                {% elif element.element_type == 'Video' %}
+                                <input type="text" name="video_element_{{ element.name }}" value="{{ element.name }}" class="form-control" title="{{ element.name }}">
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if element.element_type == 'Shapefile' %}
+                                <!-- {{ shapefile_zip_form.as_p }} -->
+                                <label for="newFilesInput">Shapefile:</label>
+                                <input type="file" name="new_files" accept=".dbf, .prj, .shp, .shx" class="form-control mt-2" multiple>
+                                <button type="submit" name="update_shapefile" value="{{ element.name }}" class="btn btn-primary">Update</button>
+                                <button type="submit" name="delete_shapefile" value="{{ element.name }}" class="btn btn-danger btn-sm">Delete</button>
+                                
+                                {% elif element.element_type == 'Image' %}
+                                {{ image_form.as_p }}
+                                <button type="submit" name="update_image" value="{{ element.name }}" class="btn btn-primary">Update</button>
+                                <button type="submit" name="delete_image" value="{{ element.name }}" class="btn btn-danger btn-sm">Delete</button>
+                                
+                                {% elif element.element_type == 'Video' %}
+                                {{ video_form.as_p }}
+                                <button type="submit" name="update_video" value="{{ element.name }}" class="btn btn-primary">Update</button>
+                                <button type="submit" name="delete_video" value="{{ element.name }}" class="btn btn-danger btn-sm">Delete</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if not forloop.last %}
+                        <tr>
+                            {% endif %}
+                            {% endfor %}
+                    </tbody>
+                </table>
+                <input type="hidden" name="save_batch" value="{{ batch.id }}">
+                <button type="submit" name="update_batch" class="btn btn-primary">Save Batch</button>
+                <button type="button" id="add_files" class="btn btn-primary">Add Files</button>
+                <div id="additional-buttons" class="mt-3"></div>
+            </form>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#add_files').on('click', function() {
+                const buttonsHtml = `
+                    <button type="button" id="add-shapefile" class="btn btn-secondary mt-2" onclick="addShapefile()">Add Shapefile</button>
+                    <button type="button" id="add-image" class="btn btn-secondary mt-2" onclick="addImage()">Add Image</button>
+                    <button type="button" id="add-video" class="btn btn-secondary mt-2" onclick="addVideo()">Add Video</button>
+                `;
+                $('#additional-buttons').html(buttonsHtml);
+            });
+        });
+
+        function addShapefile() {
+            if (!$('#shapefile-input').length) {
+                hideOtherInputs('shapefile');
+                const inputHtml = `
+                    <div id="shapefile-input">
+                        <input type="file" name="new_files" accept=".shp, .shx, .dbf, .prj" class="form-control mt-2" multiple>
+                        <button type="submit" name="add_files" class="btn btn-primary">Add Shapefile</button>
+                        <button type="button" class="btn btn-danger" onclick="cancelInput('shapefile-input')">Cancel</button>
+
+                    </div>
+                `;
+                $('#additional-buttons').append(inputHtml);
+            }
+        }
+
+        function addImage() {
+            if (!$('#image-input').length) {
+                hideOtherInputs('image');
+                const inputHtml = `
+                    <div id="image-input">
+                        <input type="file" name="new_file" accept="image/*" class="form-control mt-2">
+                        <button type="submit" name="add_files" class="btn btn-primary">Add Image</button>
+                        <button type="button" class="btn btn-danger" onclick="cancelInput('image-input')">Cancel</button>
+                    </div>
+                `;
+                $('#additional-buttons').append(inputHtml);
+            }
+        }
+
+        function addVideo() {
+            if (!$('#video-input').length) {
+                hideOtherInputs('video');
+                const inputHtml = `
+                    <div id="video-input">
+                        <input type="file" name="new_file" accept="video/mp4" class="form-control mt-2">
+                        <button type="submit" name="add_files" class="btn btn-primary">Add Video</button>
+                        <button type="button" class="btn btn-danger" onclick="cancelInput('video-input')">Cancel</button>
+                    </div>
+                `;
+                $('#additional-buttons').append(inputHtml);
+            }
+        }
+
+        function hideOtherInputs(type) {
+            const inputs = ['shapefile', 'image', 'video'];
+            inputs.forEach(input => {
+                if (input !== type) {
+                    $(`#${input}-input`).remove();
+                }
+            });
+        }
+
+        function cancelInput(inputId) {
+            $(`#${inputId}`).remove();
+        }
+        
+        function confirmDeletion(type) {
+            return confirm('Are you sure you want to delete this ' + type + '? This action cannot be undone.');
+        }
+</script>
+    </script>
+    
+</body>
+
+</html>

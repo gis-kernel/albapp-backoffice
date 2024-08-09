@@ -1,0 +1,53 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<head>
+    <title>Delete Fire Situation</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Confirm Deletion</h1>
+        <p>Are you sure you want to delete "{{ batch.batch_name }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" name="delete_batch">Delete</button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Deletion</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Confirm Deletion</h2>
+        {% if file_type and element_name %}
+            <p>Are you sure you want to delete the {{ file_type }} named "{{ element_name }}"?</p>
+            <form method="post" action="{% url 'confirm_delete' element_name=element_name file_type=file_type batch_id=batch_id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <button type="submit" class="btn btn-danger" name="confirm" value="yes">Delete</button>
+                    <a href="{% url 'update_fire_situation' batch_id=batch_id %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        {% else %}
+            <p>Are you sure you want to delete "{{ batch.batch_name }}"?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" name="delete_batch">Delete</button>
+                <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>

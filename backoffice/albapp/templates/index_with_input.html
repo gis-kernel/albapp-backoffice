@@ -1,0 +1,174 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fire Situations</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .container {
+            padding: 2rem 0rem;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            border: 0px solid #ced4da !important;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .filer {
+            border: 1px solid #ced4da !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Fire Situations</h1>
+        <form method="POST" class="mb-4">
+            {% csrf_token %}
+            <div class="form-row">
+                <!-- <div class="col">
+                    <input type="text" id="zipCodeFilter" name="zip_code" class="form-control" placeholder="ZIP CODE">
+                </div> -->
+                <div class="col">
+                    <select name="status" class="form-control">
+                        <option value="">Select Status</option>
+                        {% for status_option in status_options %}
+                        <option value="{{ status_option }}">{{ status_option}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <select name="tag" class="form-control">
+                        <option value="">Select Tag</option>
+                        {% for tag_option in tag_options %}
+                        <option value="{{ tag_option }}">{{ tag_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <select name="element_format" class="form-control">
+                        <option value="">Select Element Type</option>
+                        {% for extension_option in element_format_options %}
+                        <option value="{{ extension_option }}">{{ extension_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="date" name="fromdate" class="form-control" placeholder="From Date">
+                </div>
+                <div class="col">
+                    <input type="date" name="todate" class="form-control" placeholder="To Date">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Status</th>
+                        <th>Fire Situation</th>
+                        <th>Batch</th>
+                        <th>Element Type</th>
+                        <th>Element Name</th>
+                        <th>Tag</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fire_situation in data %}
+                    <tr>
+                        <td rowspan="{{ fire_situation.elements|length }}">
+                            <input type="text" name="status" value="{{ fire_situation.status }}" class="form-control">
+                        </td>
+                        <td rowspan="{{ fire_situation.elements|length }}">
+                            {% for uniqueID in fire_situation.unique_reference %}
+                            GPS: {{ uniqueID.gps_coords|join:', ' }},
+                            {% if not forloop.last %}<br>{% endif %}
+                            {% endfor %}
+                        </td>
+                        <td rowspan="{{ fire_situation.elements|length }}">
+                            {{ fire_situation.batch_name }}
+                        </td>
+                        {% for element in fire_situation.elements %}
+                        <td>{{ element.element_type }}</td>
+                        <td>
+                            <input type="text" name="element_name" value="{{ element.name }}" class="form-control">
+                        </td>
+                        {% if forloop.first %}
+                        <td rowspan="{{ fire_situation.elements|length }}">
+                            <input type="text" name="tags" value="{{ fire_situation.tags }}" class="form-control">
+                        </td>
+                        <td rowspan="{{ fire_situation.elements|length }}">
+                            <form action="{% url 'update_fire_situation' fire_situation.id %}" method="post"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                <br>
+                                {% if fire_situation.elements|all_elements_same_type %}
+                                <input type="hidden" name="element_type" value="{{ fire_situation.elements|get_element_type }}">
+                                {% endif %}
+                                <button type="submit" class="btn btn-warning btn-sm">Update</button>
+                                <br>
+                            </form>
+                            <form action="{% url 'delete_fire_situation' fire_situation.id %}" method="post"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                <br>
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% if not forloop.last %}
+                    <tr>
+                        {% endif %}
+                        {% endfor %}
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+</body>
+
+</html>

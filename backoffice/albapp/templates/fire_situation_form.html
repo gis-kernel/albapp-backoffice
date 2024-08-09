@@ -1,0 +1,59 @@
+<!-- fire_situation_form.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fire Situation Form</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{ form.instance.id|yesno:"Update Fire Situation,Add New Fire Situation" }}</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'index' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</body>
+
+</html>
+
+
+<!-- <div>
+
+    <input type="text" id="zipCodeFilter" name="zip_code"  placeholder="ZIP CODE">
+
+
+    <select name="status" >
+        <option value="">Select Status</option>
+        {% for status_option in status_options %}
+        <option value="{{ status_option }}">{{ status_option}}</option>
+        {% endfor %}
+    </select>
+
+
+    <select name="tag" >
+        <option value="">Select Tag</option>
+        {% for tag_option in tag_options %}
+        <option value="{{ tag_option }}">{{ tag_option }}</option>
+        {% endfor %}
+    </select>
+
+
+    <select name="element_format" >
+        <option value="">Select Element Type</option>
+        {% for extension_option in element_format_options %}
+        <option value="{{ extension_option }}">{{ extension_option }}</option>
+        {% endfor %}
+    </select>
+
+
+    <input type="date" id="dateFilter" name="date"  placeholder="Date">
+
+
+    <button type="submit" class="btn btn-primary">Apply Filters</button>
+
+</div> -->

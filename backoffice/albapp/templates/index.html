@@ -1,0 +1,392 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Fire Situations</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        body {
+            padding: 20px;
+        }
+
+        .container-fluid {
+            padding: 0;
+        }
+
+        .sidebar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            height: 100vh;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px;
+            color: #000;
+            text-decoration: none;
+        }
+
+        .sidebar a:hover {
+            background-color: #ddd;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            overflow-x: visible;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            border: 0px solid #ced4da !important;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .filer {
+            border: 1px solid #ced4da !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar">
+                <!-- <h2>Navigation</h2> -->
+                <a href="#fireSituations" onclick="showSection('fireSituations')">Fire Situations</a>
+                <a href="#mailManagement" onclick="showSection('mailManagement')">Mail Management</a>
+                <a href="#systemConnection" onclick="showSection('systemConnection')">Admin</a>
+            </div>
+            <div class="col-md-10 content">
+                <div id="mailManagement" class="section" style="display:none;">
+                    <div class="container mt-4">
+                        <h1 class="mb-4">Mail Management</h1>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">Add Email</h5>
+                                <form id="emailForm" method="POST" action="{% url 'add_email' %}">
+                                    <!-- <form id="emailForm" method="POST" action="{% url 'add_email' %}"> -->
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <input type="email" id="emailInput" name="email" class="form-control"
+                                            placeholder="Enter email" required />
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Add Email</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Email List</h5>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Email</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for email in emails %}
+                                        <tr>
+                                            <td>{{ email.email }}</td>
+                                            <td>
+                                                <form method="post" action="{% url 'delete_email' email.id %}"
+                                                    style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td>No emails found.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body">
+                                <form id="accessCodeForm" method="POST" action="{% url 'change_access_code' %}">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="accessCodeInput">Access Code for web app :</label>
+                                        <input type="text" id="accessCodeInput" name="code" value="{{access_code.code}}" class="form-control" placeholder="Enter new access code" required />
+                                    </div>
+                                    <button type="submit" class="btn btn-success mt-2">Modify</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="systemConnection" class="section" style="display:none;">
+                    <div class="container">
+                        <h2>Add New User</h2>
+                        <form method="post" action="{% url 'add_user' %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control" id="username" name="username"
+                                    style="border: 1px solid #ced4da !important" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    style="border: 1px solid #ced4da !important" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                        style="border: 1px solid #ced4da !important" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="password-toggle">
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add User</button>
+                        </form>
+
+                        <h2 class="mt-4">User List</h2>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>*****</td>
+                                    <td>
+                                        <form method="post" action="{% url 'delete_user' user.id %}"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3">No users found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="fireSituations" class="section" style="display:block;">
+                    <h1>Fire Situations</h1>
+                    <form method="POST" class="mb-4">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="col">
+                                <select name="status" class="form-control">
+                                    <option value="">Select Status</option>
+                                    {% for status_option in status_options %}
+                                    <option value="{{ status_option }}">{{ status_option}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select name="tag" class="form-control">
+                                    <option value="">Select Tag</option>
+                                    {% for tag_option in tag_options %}
+                                    <option value="{{ tag_option }}">{{ tag_option }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select name="element_format" class="form-control">
+                                    <option value="">Select Element Type</option>
+                                    {% for extension_option in element_format_options %}
+                                    <option value="{{ extension_option }}">{{ extension_option }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <input type="date" name="fromdate" class="form-control" placeholder="From Date">
+                            </div>
+                            <div class="col">
+                                <input type="date" name="todate" class="form-control" placeholder="To Date">
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button><br>
+                                <!-- <button type="submit" class="btn btn-danger">Remove Filters</button> -->
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Fire Situation</th>
+                                    <th>Batch</th>
+                                    <th>Element Type</th>
+                                    <th>Element Name</th>
+                                    <th>Tag</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fire_situation in data %}
+                                <tr>
+                                    {% if fire_situation.elements|length > 0 %}
+                                    <td rowspan="{{ fire_situation.elements|length }}">
+                                        {{ fire_situation.status }}
+                                    </td>
+                                    <td rowspan="{{ fire_situation.elements|length }}">
+                                        {% for uniqueID in fire_situation.unique_reference %}
+                                        {% if uniqueID.gps_coords %}
+                                        GPS: {{ uniqueID.gps_coords|join:', ' }}
+                                        {% elif uniqueID.zipcode %}
+                                        ZIP Code: {{ uniqueID.zipcode }}
+                                        {% endif %}
+                                        {% if not forloop.last %}<br>{% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td rowspan="{{ fire_situation.elements|length }}">
+                                        {{ fire_situation.batch_name }}
+                                    </td>
+                                    {% for element in fire_situation.elements %}
+                                    <td>{{ element.element_type }}</td>
+                                    <td>{{ element.name }}</td>
+                                    {% if forloop.first %}
+                                    <td rowspan="{{ fire_situation.elements|length }}">
+                                        {{ fire_situation.tags }}
+                                    </td>
+                                    <td rowspan="{{ fire_situation.elements|length }}">
+                                        <form action="{% url 'update_fire_situation' fire_situation.id %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <br>
+                                            {% if fire_situation.elements|all_elements_same_type %}
+                                            <input type="hidden" name="element_type" value="{{ fire_situation.elements|get_element_type }}">
+                                            {% endif %}
+                                            <button type="submit" class="btn btn-warning btn-sm">Update</button>
+                                            <br>
+                                        </form>
+                                        <form action="{% url 'delete_fire_situation' fire_situation.id %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <br>
+                                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% if not forloop.last %}
+                                <tr>
+                                {% endif %}
+                                {% endfor %}
+                                {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <form action="{% url 'export_data'%}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <br>
+                            {% for fire_situation in data %}
+                            {% if fire_situation.elements|all_elements_same_type %}
+                            <input type="hidden" name="element_type"
+                                value="{{ fire_situation.elements|get_element_type }}">
+                            {% endif %}
+                            <input type="hidden" name="batch_data" value="{{ data }}">
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary btn-sm">Export</button>
+                        </form>
+                        <form action="{% url 'delete_all' %}" method="post">
+                            {% csrf_token %}
+                            <br>
+                            <button type="submit" class="btn btn-primary btn-sm">Delete All Batches</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show the selected section
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('password-toggle');
+
+            toggleIcon.addEventListener('click', function () {
+                // Toggle the password visibility
+                if (passwordField.type === 'password') {
+                    passwordField.type = 'text';
+                    toggleIcon.innerHTML = '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
+                } else {
+                    passwordField.type = 'password';
+                    toggleIcon.innerHTML = '<i class="fa fa-eye" aria-hidden="true"></i>';
+                }
+            });
+        });
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('redirect') === 'systemConnection') {
+                showSection('systemConnection');
+            }
+            else if (urlParams.get('redirect') === 'mailManagement') {
+                showSection('mailManagement');
+            }
+        }
+
+    </script>
+</body>
+
+</html>
